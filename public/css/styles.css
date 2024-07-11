@@ -7,18 +7,19 @@ body {
     flex: 1;
   }
   .footer {
-    flex-shrink: 0; /* Prevent footer from shrinking */
-    position: sticky; /* Stick footer to the bottom */
-    bottom: 0; /* Position at the bottom */
-    width: 100%; /* Full width */
-    background-color: #f8f9fa; /* Background color */
-    text-align: center; /* Center text */
-    padding: 1rem 0; /* Padding */
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    background-color: #f8f9fa;
+    text-align: center;
+    padding: 1rem 0;
   }
   .aspect-ratio-container {
     position: relative;
     width: 100%;
-    padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) */
+    /* 21:9 Aspect Ratio (9 / 21 * 100) */
+    padding-top: 42.85%;
     overflow: hidden;
   }
   
@@ -28,5 +29,5 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Ensure the image covers the container */
+    object-fit: cover;
   }

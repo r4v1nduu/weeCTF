@@ -8,29 +8,24 @@
 </head>
 <body>
   <h1>Welcome to the Blog</h1>
+  <a href="/create-post" class="btn btn-primary mt-3 mb-5">Create Post</a>
 
-<% if (user) { %>
-  <!-- If logged in, show posts -->
+  <% if (user) { %>
   <% posts.forEach(post => { %>
     <div class="card mb-3">
       <div class="card-body">
-        <h5 class="card-title">
-          <a href="/post/<%= post.id %>"><%= post.title %></a>
-        </h5>
+        <h5 class="card-title"><a href="/post/<%= post.id %>"><%= post.title %></a></h5>
         <p class="card-text">Published by <%= post.username %></p>
         <div class="aspect-ratio-container">
           <img src="<%= post.image_url %>" class="img-fluid aspect-ratio-item" alt="Post Image">
         </div>
         <p class="card-text"><%= post.content %></p>
-        
-        
       </div>
     </div>
   <% }); %>
-<% } else { %>
-  <!-- If not logged in, show login message -->
-  <p><%= message %></p>
-<% } %>
+  <% } else { %>
+    <p><%= message %></p>
+  <% } %>
   
 </body>
 </html>

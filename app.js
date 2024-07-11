@@ -1,11 +1,11 @@
-const express = require('express');
+const expressLayouts = require('express-ejs-layouts');
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
-const cookieParser = require('cookie-parser');
+const express = require('express');
+const multer = require('multer');
 const mysql = require('mysql2');
 const path = require('path');
-const multer = require('multer');
-const expressLayouts = require('express-ejs-layouts');
 
 const app = express();
 const db = mysql.createConnection({
@@ -19,8 +19,9 @@ const db = mysql.createConnection({
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(expressLayouts);
 app.set('view engine', 'ejs');
+app.use(expressLayouts);
+
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
@@ -48,8 +49,8 @@ app.use((req, res, next) => {
   }
 });
 
-// Routes
-// Render index/dashboard
+
+
 app.get('/', (req, res) => {
   const userId = req.cookies.userId;
   if (!userId) {
@@ -68,8 +69,9 @@ app.get('/', (req, res) => {
   }
 });
 
+
 app.get('/register', (req, res) => {
-  res.render('register', { title: 'Register' });
+  res.render('register');
 });
 
 app.post('/register', (req, res) => {
@@ -81,8 +83,9 @@ app.post('/register', (req, res) => {
   });
 });
 
+
 app.get('/login', (req, res) => {
-  res.render('login', { title: 'Login' });
+  res.render('login');
 });
 
 app.post('/login', (req, res) => {
@@ -103,8 +106,6 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-// Render dashboard view
-
 
 app.get('/create-post', (req, res) => {
   const userId = req.cookies.userId;
@@ -122,6 +123,7 @@ app.post('/create-post', upload.single('image'), (req, res) => {
     res.redirect('/');
   });
 });
+
 
 app.get('/post/:id', (req, res) => {
   const postId = req.params.id;
@@ -155,6 +157,8 @@ app.post('/post/:id/comment', (req, res) => {
     res.redirect(`/post/${postId}`);
   });
 });
+
+
 
 app.listen(3000, () => {
   console.log('Server is running on http://localhost:3000');

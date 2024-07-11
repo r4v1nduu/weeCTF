@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= post.title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="card mb-4">
+    <div class="aspect-ratio-container">
+      <img src="<%= post.image_url %>" class="img-fluid aspect-ratio-item" alt="Post Image">
+    </div>
+    <div class="card-body">
+      <h1 class="card-title"><%= post.title %></h1>
+      <p class="card-text"><%= post.content %></p>
+      <p class="card-text"><small class="text-muted">Published by: <%= post.username %></small></p>
+    </div>
+  </div>
+  
+  <h2>Comments</h2>
+  <ul class="list-group mb-4">
+    <% comments.forEach(comment => { %>
+      <li class="list-group-item"><%= comment.content %> - <%= comment.username %></li>
+    <% }) %>
+  </ul>
+  
+  <h2>Add a Comment</h2>
+  <form action="/post/<%= post.id %>/comment" method="post">
+    <div class="form-group">
+      <textarea class="form-control" name="content" rows="3" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+  
+  <a href="/dashboard" class="btn btn-secondary mt-4">Back to Dashboard</a>
+  
+</body>
+</html>

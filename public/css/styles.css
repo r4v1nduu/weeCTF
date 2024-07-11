@@ -1,0 +1,32 @@
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .container {
+    flex: 1;
+  }
+  .footer {
+    flex-shrink: 0; /* Prevent footer from shrinking */
+    position: sticky; /* Stick footer to the bottom */
+    bottom: 0; /* Position at the bottom */
+    width: 100%; /* Full width */
+    background-color: #f8f9fa; /* Background color */
+    text-align: center; /* Center text */
+    padding: 1rem 0; /* Padding */
+  }
+  .aspect-ratio-container {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 * 100) */
+    overflow: hidden;
+  }
+  
+  .aspect-ratio-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensure the image covers the container */
+  }

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <h1>Welcome to the Blog</h1>
+
+<% if (user) { %>
+  <!-- If logged in, show posts -->
+  <% posts.forEach(post => { %>
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">
+          <a href="/post/<%= post.id %>"><%= post.title %></a>
+        </h5>
+        <p class="card-text">Published by <%= post.username %></p>
+        <div class="aspect-ratio-container">
+          <img src="<%= post.image_url %>" class="img-fluid aspect-ratio-item" alt="Post Image">
+        </div>
+        <p class="card-text"><%= post.content %></p>
+        
+        
+      </div>
+    </div>
+  <% }); %>
+<% } else { %>
+  <!-- If not logged in, show login message -->
+  <p><%= message %></p>
+<% } %>
+  
+</body>
+</html>

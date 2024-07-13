@@ -3,29 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home</title>
+  <title>Blog</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <h1>Welcome to the Blog</h1>
-  <a href="/create-post" class="btn btn-primary mt-3 mb-5">Create Post</a>
+  <% include('partials/navbar') %>
+  <div class="container mt-4">
+    <h1>Welcome to the Blog</h1>
 
-  <% if (user) { %>
-  <% posts.forEach(post => { %>
-    <div class="card mb-3">
-      <div class="card-body">
-        <h5 class="card-title"><a href="/post/<%= post.id %>"><%= post.title %></a></h5>
-        <p class="card-text">Published by <%= post.username %></p>
-        <div class="aspect-ratio-container">
-          <img src="<%= post.image_url %>" class="img-fluid aspect-ratio-item" alt="Post Image">
+    <!--
+    ORL{o0paDhZRuaAcaSai}
+    You found a FLAG, Keep looking through page sources ;)
+    -->
+
+    <% if (user) { %>
+      <% posts.forEach(post => { %>
+        <div class="card mb-3">
+          <div class="card-body">
+            <h5 class="card-title">
+              <a href="/post/<%= post.id %>" class="btn btn-link"><%= post.title %></a>
+            </h5>
+            <p class="card-text"><%= post.content %></p>
+            <p class="card-text">Published by <%= post.username %></p>
+            <% if (post.image_url) { %>
+              <div class="aspect-ratio-container">
+                <img src="<%= post.image_url %>" class="img-fluid aspect-ratio-item" alt="Post Image">
+              </div>
+            <% } %>
+          </div>
         </div>
-        <p class="card-text"><%= post.content %></p>
-      </div>
-    </div>
-  <% }); %>
-  <% } else { %>
-    <p><%= message %></p>
-  <% } %>
+      <% }); %>
+      
+      <a href="/create-post" class="btn btn-primary">Create Post</a>
+
+    <% } else { %>
+      <p><%= message %></p>
+      <a href="/login" class="btn btn-primary">Login</a>
+      <a href="/register" class="btn btn-secondary">Register</a>
+    <% } %>
+  </div>
+
+  <% include('partials/footer') %>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   
+  <script><% if (showFlag) { %> alert('Your flag is: <%= flag %>'); <% } %></script>
 </body>
 </html>

@@ -24,7 +24,7 @@
   <h2>Comments</h2>
   <ul class="list-group mb-4">
     <% comments.forEach(comment => { %>
-      <li class="list-group-item"><%= comment.content %> - <%= comment.username %></li>
+      <li class="list-group-item"><%- comment.content %> - <%= comment.username %></li>
     <% }) %>
   </ul>
   

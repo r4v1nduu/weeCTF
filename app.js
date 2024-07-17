@@ -35,7 +35,7 @@ app.use((req, res, next) => {
   const encodedUsername = req.cookies.username;
   if (encodedUsername) {
     const username = decode(encodedUsername);
-    db.query('SELECT * FROM users WHERE username = ?', [username], (err, results) => {
+    db.query('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, results) => {
       if (err) return next();
       res.locals.user = results[0];
       next();
@@ -45,8 +45,6 @@ app.use((req, res, next) => {
     next();
   }
 });
-
-
 
 // Not used on the CTF
 
@@ -77,8 +75,6 @@ app.post('/create-post', upload.single('image'), (req, res) => {
   });
 });
 
-
-
 // Routes
 
 app.get('/', (req, res) => {
@@ -88,28 +84,21 @@ app.get('/', (req, res) => {
     res.render('index', { posts: [], message, showFlag: false, flag: null });
   } else {
     const username = decode(encodedUsername);
-    db.query('SELECT * FROM users WHERE username = ?', [username], (err, userResults) => {
+    db.query('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, results) => {
       if (err) {return res.send('Error loading user');}
-      const user = userResults[0];
+      const user = results[0];
       const showFlag = req.cookies.showFlag === 'true';
       res.clearCookie('showFlag'); // Clear the flag cookie after showing it
-
-      const postsQuery = `SELECT posts.*, users.username FROM posts JOIN users ON posts.user_name = users.username`;
-      db.query(postsQuery, (err, posts) => {
-        if (err) {return res.send('Error loading posts');}
-        res.render('index', { posts, message: '', user, showFlag, flag: user.flag });
-      });
+      res.render('index', { posts: [], message: '', user, showFlag, flag: user.flag });
     });
   }
 });
-
-
 
 app.get('/login', (req, res) => {res.render('login');});
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const sql = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
+  const sql = `SELECT *, users.flag FROM users WHERE username = '${username}' AND password = '${password}'`;
   db.query(sql, (err, results) => {
     if (err) return res.send('Error logging in');
     const user = results[0];
@@ -134,7 +123,6 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-
 app.get('/post/:id', (req, res) => {
   const postId = req.params.id;
   db.query(`SELECT posts.*, users.username FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id = ?`, [postId], (err, postResults) => {
@@ -146,7 +134,6 @@ app.get('/post/:id', (req, res) => {
     });
   });
 });
-
 
 // XSS
 app.post('/post/:id/comment', (req, res) => {
@@ -161,7 +148,6 @@ app.post('/post/:id/comment', (req, res) => {
   });
 });
 
-
 app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
 app.get('/downloads', async (req, res) => {
   try {
@@ -172,7 +158,6 @@ app.get('/downloads', async (req, res) => {
     res.status(500).send('Error reading downloads directory');
   }
 });
-
 
 app.get('/images', (req, res) => {res.send('Nothing Here');});
 app.get('/videos', (req, res) => {res.send('Nothing Here');});

@@ -11,9 +11,11 @@
   <a href="/" class="btn btn-secondary my-4">Back to Dashboard</a>
 
   <div class="card mb-4">
-    <div class="aspect-ratio-container">
-      <img src="<%= post.image_url %>" class="img-fluid aspect-ratio-item" alt="Post Image">
-    </div>
+    <% if (post.image_url) { %>
+      <div class="aspect-ratio-container">
+        <img src="<%= post.image_url %>" class="img-fluid aspect-ratio-item" alt="Post Image">
+      </div>
+    <% } %>
     <div class="card-body">
       <h1 class="card-title"><%= post.title %></h1>
       <p class="card-text"><%= post.content %></p>

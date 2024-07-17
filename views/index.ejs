@@ -33,11 +33,14 @@
                 <img src="<%= post.image_url %>" class="img-fluid aspect-ratio-item" alt="Post Image">
               </div>
             <% } %>
+            <% if (isAdmin) { %>
+              <form action="/delete-post/<%= post.id %>" method="POST">
+                <button type="submit" class="btn btn-danger">Delete</button>
+              </form>
+            <% } %>
           </div>
         </div>
       <% }); %>
-      
-
     <% } else { %>
       <p><%= message %></p>
       <a href="/login" class="btn btn-primary">Login</a>
@@ -51,6 +54,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   
-  <script><% if (showFlag) { %> alert('Your flag is: <%= flag %>'); <% } %></script>
+  <% if (showFlag) { %> <script> alert('Your flag is: <%= flag %>'); </script> <% } %>
+  <% if (showDeleteFlag) { %> <script> alert('You found another flag: ORL{deleteFlag123}'); </script> <% } %>
 </body>
 </html>

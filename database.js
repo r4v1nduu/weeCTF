@@ -12,8 +12,10 @@ function createTables() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username VARCHAR(255) NOT NULL,
         password VARCHAR(255) NOT NULL,
+        admin BOOLEAN DEFAULT FALSE,
         flag VARCHAR(255),
-        flag_seen BOOLEAN DEFAULT FALSE
+        flag_seen BOOLEAN DEFAULT FALSE,
+        delete_flag_shown BOOLEAN DEFAULT FALSE
       )
     `);
 
@@ -40,11 +42,11 @@ function createTables() {
     `);
 
     db.run(`
-      INSERT INTO users (username, password, flag, flag_seen)
-      VALUES ('newuser01', 'ijQnTOzw', NULL, TRUE),
-             ('newuser02', 'T6IGn3cm', 'ORL{s0kQc9cgHezyOY9b}', FALSE),
-             ('olduser01', 'zCLyXGkk', NULL, TRUE),
-             ('ravindu47', 'bbZIBtX9', 'ORL{n6YgeIjcNDnYT5yF}', FALSE);
+      INSERT INTO users (username, password, admin, flag, flag_seen)
+      VALUES ('newuser35', 'ijQnTOzw', FALSE, NULL, TRUE),
+             ('newuser47', 'T6IGn3cm', FALSE,  'ORL{s0kQc9cgHezyOY9b}', FALSE),
+             ('olduser52', 'zCLyXGkk', FALSE, NULL, TRUE),
+             ('ravindu47', 'rCDyXek4', TRUE, NULL, TRUE);
     `);
   });
 }

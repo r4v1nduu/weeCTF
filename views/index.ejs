@@ -18,6 +18,8 @@
     -->
 
     <% if (user) { %>
+      <a href="/create-post" class="btn btn-primary mb-5">Create Post</a>
+
       <% posts.forEach(post => { %>
         <div class="card mb-3">
           <div class="card-body">
@@ -35,7 +37,6 @@
         </div>
       <% }); %>
       
-      <a href="/create-post" class="btn btn-primary">Create Post</a>
 
     <% } else { %>
       <p><%= message %></p>

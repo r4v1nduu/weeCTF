@@ -1,13 +1,5 @@
-CREATE DATABASE blog;
-CREATE USER 'blogger'@'localhost' IDENTIFIED BY 'rHVHh9Rx';
-GRANT ALL PRIVILEGES ON blog.* TO 'blogger'@'localhost';
-FLUSH PRIVILEGES;
-
-USE blog;
-
 CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username 
+    username VARCHAR(255) PRIMARY KEY,
     password VARCHAR(255) NOT NULL,
     flag VARCHAR(255),
     flag_seen BOOLEAN DEFAULT FALSE
@@ -19,19 +11,17 @@ CREATE TABLE posts (
     content TEXT NOT NULL,
     user_name VARCHAR(255) NOT NULL,
     image_url VARCHAR(255),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_name) REFERENCES users(username)
 );
 
 CREATE TABLE comments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     content TEXT NOT NULL,
-    user_id INT,
+    user_name VARCHAR(255),
     post_id INT,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (user_name) REFERENCES users(username),
     FOREIGN KEY (post_id) REFERENCES posts(id)
 );
-
-
 
 INSERT INTO users (username, password, flag, flag_seen)
 VALUES ('newuser01', 'ijQnTOzw', NULL, TRUE),

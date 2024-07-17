@@ -5,16 +5,11 @@ const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const express = require('express');
 const multer = require('multer');
-const mysql = require('mysql2');
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 const app = express();
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'blogger',
-  password: 'rHVHh9Rx',
-  database: 'blog'
-});
+const db = new sqlite3.Database('blog.db');
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
@@ -35,9 +30,9 @@ app.use((req, res, next) => {
   const encodedUsername = req.cookies.username;
   if (encodedUsername) {
     const username = decode(encodedUsername);
-    db.query('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, results) => {
+    db.get('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, user) => {
       if (err) return next();
-      res.locals.user = results[0];
+      res.locals.user = user;
       next();
     });
   } else {
@@ -51,7 +46,7 @@ app.use((req, res, next) => {
 app.get('/register', (req, res) => {res.render('register');});
 app.post('/register', (req, res) => {
   const { username, password } = req.body;
-  db.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, password], (err) => {
+  db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password], (err) => {
     if (err) return res.send('Error registering user');
     res.redirect('/login');
   });
@@ -69,7 +64,7 @@ app.post('/create-post', upload.single('image'), (req, res) => {
   const username = decode(encodedUsername);
   const { title, content } = req.body;
   const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
-  db.query('INSERT INTO posts (title, content, image_url, user_name) VALUES (?, ?, ?, ?)', [title, content, imageUrl, username], (err) => {
+  db.run('INSERT INTO posts (title, content, image_url, user_name) VALUES (?, ?, ?, ?)', [title, content, imageUrl, username], (err) => {
     if (err) return res.send('Error creating post');
     res.redirect('/');
   });
@@ -84,9 +79,8 @@ app.get('/', (req, res) => {
     res.render('index', { posts: [], message, showFlag: false, flag: null });
   } else {
     const username = decode(encodedUsername);
-    db.query('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, results) => {
+    db.get('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, user) => {
       if (err) {return res.send('Error loading user');}
-      const user = results[0];
       const showFlag = req.cookies.showFlag === 'true';
       res.clearCookie('showFlag'); // Clear the flag cookie after showing it
       res.render('index', { posts: [], message: '', user, showFlag, flag: user.flag });
@@ -98,15 +92,12 @@ app.get('/login', (req, res) => {res.render('login');});
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const sql = `SELECT *, users.flag FROM users WHERE username = '${username}' AND password = '${password}'`;
-  db.query(sql, (err, results) => {
+  db.get(`SELECT *, users.flag FROM users WHERE username = ? AND password = ?`, [username, password], (err, user) => {
     if (err) return res.send('Error logging in');
-    const user = results[0];
     if (!user) {return res.send('Invalid username or password');}
     const showFlag = !user.flag_seen;
     if (showFlag) {
-      const updateSql = `UPDATE users SET flag_seen = TRUE WHERE id = '${user.id}'`;
-      db.query(updateSql, (err) => {
+      db.run(`UPDATE users SET flag_seen = TRUE WHERE id = ?`, [user.id], (err) => {
         if (err) return res.send('Error updating flag status');
       });
     }
@@ -125,10 +116,10 @@ app.get('/logout', (req, res) => {
 
 app.get('/post/:id', (req, res) => {
   const postId = req.params.id;
-  db.query(`SELECT posts.*, users.username FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id = ?`, [postId], (err, postResults) => {
+  db.all(`SELECT posts.*, users.username FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id = ?`, [postId], (err, postResults) => {
     if (err) return res.send('Error loading post');
     const post = postResults[0];
-    db.query(`SELECT comments.*, users.username FROM comments JOIN users ON comments.user_id = users.id WHERE comments.post_id = ?`, [postId], (err, commentResults) => {
+    db.all(`SELECT comments.*, users.username FROM comments JOIN users ON comments.user_id = users.id WHERE comments.post_id = ?`, [postId], (err, commentResults) => {
       if (err) return res.send('Error loading comments');
       res.render('post', { title: post.title, post, comments: commentResults });
     });
@@ -142,7 +133,7 @@ app.post('/post/:id/comment', (req, res) => {
   const username = decode(encodedUsername);
   const postId = req.params.id;
   const { content } = req.body;
-  db.query('INSERT INTO comments (content, user_id, post_id) VALUES (?, ?, ?)', [content, username, postId], (err) => {
+  db.run('INSERT INTO comments (content, user_id, post_id) VALUES (?, ?, ?)', [content, username, postId], (err) => {
     if (err) return res.send('Error posting comment');
     res.redirect(`/post/${postId}`);
   });

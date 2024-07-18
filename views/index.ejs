@@ -18,7 +18,10 @@
     -->
 
     <% if (user) { %>
-      <a href="/create-post" class="btn btn-primary mb-5">Create Post</a>
+      <div class="alert alert-warning container" role="alert">
+        Posting function is disabled temporarily !
+      </div>
+      <a href="/create-post" class="btn btn-primary mb-5 disabled">Create Post</a>
 
       <% posts.forEach(post => { %>
         <div class="card mb-3">

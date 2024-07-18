@@ -10,6 +10,7 @@ const multer = require('multer');
 const path = require('path');
 
 const app = express();
+//const db = new sqlite3.Database(path.join(__dirname, 'data', 'blog.db'));
 const db = new sqlite3.Database('blog.db');
 
 // Middleware
@@ -23,7 +24,7 @@ app.use(session({
   secret: '5vsaFghFA54adsF4a',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // Use secure: true in production
+  cookie: { secure: false }
 }));
 
 // Multer setup for file uploads
@@ -58,9 +59,15 @@ app.use(async (req, res, next) => {
 
 // Middleware to check isAdmin value from cookie for each route
 function checkIsAdmin(req, res, next) {
-  res.isAdmin = req.cookies.isAdmin; // Set the isAdmin value based on the cookie
+  res.isAdmin = req.cookies.isAdmin;
   next();
 }
+
+
+
+
+
+
 
 app.get('/', async (req, res) => {
   const posts = await getAllPosts();
@@ -85,7 +92,7 @@ app.get('/', async (req, res) => {
       
       res.clearCookie('showFlag'); // Clear the showFlag cookie after showing it
       res.clearCookie('deleteFlag'); // Clear the deleteFlag cookie after showing it
-      isAdmin = user.admin; // Get the admin status from the database
+      isAdmin = user.admin;
       res.render('index', { posts, message, showFlag, flag, user, isAdmin });
     });
 
@@ -94,9 +101,6 @@ app.get('/', async (req, res) => {
     res.render('index', { posts, message, showFlag, flag, isAdmin });
   }
 });
-
-
-
 
 app.get('/login', (req, res) => {
   res.render('login');
@@ -136,7 +140,7 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-app.get('/post/:id', checkIsAdmin, async (req, res) => {
+app.get('/post/:id', async (req, res) => {
   const postId = req.params.id;
   try {
     const post = await getPostById(postId);
@@ -151,7 +155,7 @@ app.get('/post/:id', checkIsAdmin, async (req, res) => {
   }
 });
 
-app.post('/post/:id/comment', checkIsAdmin, async (req, res) => {
+app.post('/post/:id/comment', async (req, res) => {
   const encodedUsername = req.cookies.username;
   if (!encodedUsername) return res.redirect('/login');
   const username = decode(encodedUsername);
@@ -184,6 +188,10 @@ app.post('/delete-post/:id', checkIsAdmin, async (req, res) => {
 
 
 
+
+
+
+
 app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
 app.get('/downloads', async (req, res) => {
   const files = await fs.readdir(path.join(__dirname, 'downloads'));
@@ -198,28 +206,29 @@ app.get('/logs', (req, res) => { res.send('A'); });
 app.get('/backup', (req, res) => { res.send('Another Flag here > ORL{ZzwQLnLSdMt9GEgP}'); });
 
 app.get('/register', (req, res) => { res.render('register'); });
-app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
-  await registerUser(username, password);
-  res.redirect('/login');
-});
-app.get('/create-post', checkIsAdmin, (req, res) => {
+
+app.get('/create-post', (req, res) => {
   const encodedUsername = req.cookies.username;
   if (!encodedUsername) return res.redirect('/login');
   const username = decode(encodedUsername);
   res.render('create-post', { title: 'Create Post', username });
 });
-app.post('/create-post', checkIsAdmin, upload.single('image'), async (req, res) => {
-  const encodedUsername = req.cookies.username;
-  if (!encodedUsername) return res.redirect('/login');
-  const username = decode(encodedUsername);
-  const { title, content } = req.body;
-  const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
-  await createPost(title, content, imageUrl, username);
-  res.redirect('/');
+
+
+
+
+
+
+
+const port = process.env.PORT || 8080;
+app.listen(port, function () {
+  console.log(`wee Blog listening on ${port}!`);
 });
 
-app.listen(3000, () => { console.log('Server is running on http://localhost:3000'); });
+
+
+
+
 
 // Helper functions
 async function getUserByUsername(username) {
@@ -282,7 +291,6 @@ async function createComment(content, username, postId) {
   });
 }
 
-
 async function deletePost(postId) {
   try {
     await new Promise((resolve, reject) => {
@@ -297,38 +305,10 @@ async function deletePost(postId) {
   }
 }
 
-async function createPost(title, content, imageUrl, username) {
-  try {
-    await new Promise((resolve, reject) => {
-      db.run('INSERT INTO posts (title, content, image_url, user_name) VALUES (?, ?, ?, ?)', [title, content, imageUrl, username], (err) => {
-        if (err) reject(err);
-        resolve();
-      });
-    });
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
-}
-
 async function updateFlagSeen(userId) {
   try {
     await new Promise((resolve, reject) => {
       db.run('UPDATE users SET flag_seen = ? WHERE id = ?', [true, userId], (err) => {
-        if (err) reject(err);
-        resolve();
-      });
-    });
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
-}
-
-async function registerUser(username, password) {
-  try {
-    await new Promise((resolve, reject) => {
-      db.run('INSERT INTO users (username, password, admin) VALUES (?, ?, false)', [username, password], (err) => {
         if (err) reject(err);
         resolve();
       });

@@ -2,9 +2,10 @@
   "name": "ctff",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
@@ -19,5 +20,8 @@
     "express-session": "^1.18.0",
     "multer": "^1.4.5-lts.1",
     "sqlite3": "^5.1.7"
-  }
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.10"
+  }  
 }

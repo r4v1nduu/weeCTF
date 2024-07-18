@@ -235,23 +235,33 @@ async function getAllPosts() {
 }
 
 async function getPostById(postId) {
-  const post = await new Promise((resolve, reject) => {
-    db.get(`SELECT posts.*, users.username FROM posts JOIN users ON posts.user_name = users.username WHERE posts.id = ?`, [postId], (err, post) => {
-      if (err) reject(err);
-      resolve(post);
+  try {
+    const post = await new Promise((resolve, reject) => {
+      db.get(`SELECT posts.*, users.username FROM posts JOIN users ON posts.user_name = users.username WHERE posts.id = ?`, [postId], (err, post) => {
+        if (err) reject(err);
+        resolve(post || null); // Resolve with null if post is not found
+      });
     });
-  });
-  return post;
+    return post;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 }
 
 async function getCommentsByPostId(postId) {
-  const comments = await new Promise((resolve, reject) => {
-    db.all(`SELECT comments.*, users.username FROM comments JOIN users ON comments.user_name = users.username WHERE comments.post_id = ?`, [postId], (err, comments) => {
-      if (err) reject(err);
-      resolve(comments);
+  try {
+    const comments = await new Promise((resolve, reject) => {
+      db.all(`SELECT comments.*, users.username FROM comments JOIN users ON comments.user_name = users.username WHERE comments.post_id = ?`, [postId], (err, comments) => {
+        if (err) reject(err);
+        resolve(comments);
+      });
     });
-  });
-  return comments;
+    return comments;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 }
 
 async function createComment(content, username, postId) {
@@ -266,37 +276,57 @@ async function createComment(content, username, postId) {
 
 
 async function deletePost(postId) {
-  await new Promise((resolve, reject) => {
-    db.run('DELETE FROM posts WHERE id = ?', [postId], (err) => {
-      if (err) reject(err);
-      resolve();
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('DELETE FROM posts WHERE id = ?', [postId], (err) => {
+        if (err) reject(err);
+        resolve();
+      });
     });
-  });
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 }
 
 async function createPost(title, content, imageUrl, username) {
-  await new Promise((resolve, reject) => {
-    db.run('INSERT INTO posts (title, content, image_url, user_name) VALUES (?, ?, ?, ?)', [title, content, imageUrl, username], (err) => {
-      if (err) reject(err);
-      resolve();
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('INSERT INTO posts (title, content, image_url, user_name) VALUES (?, ?, ?, ?)', [title, content, imageUrl, username], (err) => {
+        if (err) reject(err);
+        resolve();
+      });
     });
-  });
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 }
 
 async function updateFlagSeen(userId) {
-  await new Promise((resolve, reject) => {
-    db.run('UPDATE users SET flag_seen = ? WHERE id = ?', [true, userId], (err) => {
-      if (err) reject(err);
-      resolve();
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE users SET flag_seen = ? WHERE id = ?', [true, userId], (err) => {
+        if (err) reject(err);
+        resolve();
+      });
     });
-  });
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 }
 
 async function registerUser(username, password) {
-  await new Promise((resolve, reject) => {
-    db.run('INSERT INTO users (username, password, admin) VALUES (?, ?, false)', [username, password], (err) => {
-      if (err) reject(err);
-      resolve();
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('INSERT INTO users (username, password, admin) VALUES (?, ?, false)', [username, password], (err) => {
+        if (err) reject(err);
+        resolve();
+      });
     });
-  });
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 }

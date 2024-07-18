@@ -11,17 +11,13 @@
   "license": "ISC",
   "dependencies": {
     "base64-js": "^1.5.1",
-    "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.6",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.18.0",
-    "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "mysql": "^2.18.1",
-    "mysql2": "^3.10.2",
     "sqlite3": "^5.1.7"
   }
 }

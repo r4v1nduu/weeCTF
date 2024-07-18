@@ -58,7 +58,6 @@ app.use(async (req, res, next) => {
 
 // Middleware to check isAdmin value from cookie for each route
 function checkIsAdmin(req, res, next) {
-  res.isAdmin = req.cookies.isAdmin; // Set the isAdmin value based on the cookie
   next();
 }
 
@@ -66,29 +65,21 @@ app.get('/', async (req, res) => {
   const posts = await getAllPosts();
   const encodedUsername = req.cookies.username;
   let message = '';
-  let showFlag = req.cookies.showFlag === 'true'; // Check the showFlag cookie
+  let showFlag = req.cookies.showFlag === 'true';
   let flag = null;
-  let isAdmin = false;
+  let isAdmin = req.cookies.isAdmin === 'true';
 
   if (encodedUsername) {
     const username = decode(encodedUsername);
-
-    db.get('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, user) => {
-      if (err) return res.send('Error loading user');
-      
-      // Check for the deleteFlag cookie and set the flag if present
-      if (req.cookies.deleteFlag) {
-        flag = req.cookies.deleteFlag;
-      } else {
-        flag = user.flag;
-      }
-      
-      res.clearCookie('showFlag'); // Clear the showFlag cookie after showing it
-      res.clearCookie('deleteFlag'); // Clear the deleteFlag cookie after showing it
-      isAdmin = user.admin; // Get the admin status from the database
-      res.render('index', { posts, message, showFlag, flag, user, isAdmin });
-    });
-
+    const user = await getUserByUsername(username);
+    if (req.cookies.deleteFlag) {
+      flag = req.cookies.deleteFlag;
+    } else {
+      flag = user.flag;
+    }
+    res.clearCookie('showFlag');
+    res.clearCookie('deleteFlag');
+    res.render('index', { posts, message, showFlag, flag, user, isAdmin });
   } else {
     message = "Login to see posts";
     res.render('index', { posts, message, showFlag, flag, isAdmin });

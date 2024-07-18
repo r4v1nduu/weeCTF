@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use(expressLayouts);
 
 app.use(session({
-  secret: 'your_secret_key',
+  secret: '5vsaFghFA54adsF4a',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false } // Use secure: true in production
@@ -36,7 +36,7 @@ const upload = multer({ storage });
 // Middleware to set user data for views
 app.use(async (req, res, next) => {
   const encodedUsername = req.cookies.username;
-  const isAdmin = req.cookies.isAdmin;
+  const isAdmin = req.cookies.isAdmin === 'true';
   if (encodedUsername) {
     const username = decode(encodedUsername);
     db.get('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, user) => {
@@ -56,18 +56,17 @@ app.use(async (req, res, next) => {
   }
 });
 
-
-
-
-
-
+// Middleware to check isAdmin value from cookie for each route
+function checkIsAdmin(req, res, next) {
+  res.isAdmin = req.cookies.isAdmin; // Set the isAdmin value based on the cookie
+  next();
+}
 
 app.get('/', async (req, res) => {
   const posts = await getAllPosts();
   const encodedUsername = req.cookies.username;
   let message = '';
-  let showFlag = false;
-  let showDeleteFlag = false;
+  let showFlag = req.cookies.showFlag === 'true'; // Check the showFlag cookie
   let flag = null;
   let isAdmin = false;
 
@@ -76,21 +75,28 @@ app.get('/', async (req, res) => {
 
     db.get('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, user) => {
       if (err) return res.send('Error loading user');
-      showFlag = req.cookies.showFlag === 'true';
-      res.clearCookie('showFlag'); // Clear the flag cookie after showing it
-      showDeleteFlag = req.cookies.showDeleteFlag;
-      res.clearCookie('showDeleteFlag');
-      flag = user.flag;
-      isAdmin = user.admin;
-      res.render('index', { posts, message, showFlag, showDeleteFlag, flag, user, isAdmin });
+      
+      // Check for the deleteFlag cookie and set the flag if present
+      if (req.cookies.deleteFlag) {
+        flag = req.cookies.deleteFlag;
+      } else {
+        flag = user.flag;
+      }
+      
+      res.clearCookie('showFlag'); // Clear the showFlag cookie after showing it
+      res.clearCookie('deleteFlag'); // Clear the deleteFlag cookie after showing it
+      isAdmin = user.admin; // Get the admin status from the database
+      res.render('index', { posts, message, showFlag, flag, user, isAdmin });
     });
-  
+
   } else {
     message = "Login to see posts";
-    res.render('index', { posts, message, showFlag, showDeleteFlag, flag });
+    res.render('index', { posts, message, showFlag, flag, isAdmin });
   }
-  
 });
+
+
+
 
 app.get('/login', (req, res) => {
   res.render('login');
@@ -130,20 +136,14 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-
-
-
-
-
-
-app.get('/post/:id', async (req, res) => {
+app.get('/post/:id', checkIsAdmin, async (req, res) => {
   const postId = req.params.id;
   const post = await getPostById(postId);
   const comments = await getCommentsByPostId(postId);
   res.render('post', { title: post.title, post, comments });
 });
 
-app.post('/post/:id/comment', async (req, res) => {
+app.post('/post/:id/comment', checkIsAdmin, async (req, res) => {
   const encodedUsername = req.cookies.username;
   if (!encodedUsername) return res.redirect('/login');
   const username = decode(encodedUsername);
@@ -153,7 +153,7 @@ app.post('/post/:id/comment', async (req, res) => {
   res.redirect(`/post/${postId}`);
 });
 
-app.post('/delete-post/:id', async (req, res) => {
+app.post('/delete-post/:id', checkIsAdmin, async (req, res) => {
   const postId = req.params.id;
   const encodedUsername = req.cookies.username;
 
@@ -162,20 +162,17 @@ app.post('/delete-post/:id', async (req, res) => {
   }
 
   const user = await getUserByUsername(decode(encodedUsername));
-  const isAdmin = user.admin;
+  const isAdmin = res.isAdmin; // Use the isAdmin value from the middleware
 
   if (!isAdmin) {
     return res.status(403).send('You do not have permission to delete this post');
   }
 
   await deletePost(postId);
-  req.session.showDeleteFlag = true;
+  res.cookie('deleteFlag', 'ORL{n6YgeljcNDnYT5yF}'); // Set the deleteFlag cookie
+  res.cookie('showFlag', 'true'); // Set the showFlag cookie
   res.redirect('/');
 });
-
-
-
-
 
 
 
@@ -185,33 +182,26 @@ app.get('/downloads', async (req, res) => {
   res.render('downloads', { files });
 });
 
-app.get('/images', (req, res) => {res.send('Nothing Here');});
-app.get('/videos', (req, res) => {res.send('Nothing Here');});
-app.get('/assets', (req, res) => {res.send('Nothing Here');});
+app.get('/images', (req, res) => { res.send('Nothing Here'); });
+app.get('/videos', (req, res) => { res.send('Nothing Here'); });
+app.get('/assets', (req, res) => { res.send('Nothing Here'); });
 
-app.get('/logs', (req, res) => {res.send('A');});
-app.get('/backup', (req, res) => {res.send('Another Flag here > ORL{ZzwQLnLSdMt9GEgP}');});
+app.get('/logs', (req, res) => { res.send('A'); });
+app.get('/backup', (req, res) => { res.send('Another Flag here > ORL{ZzwQLnLSdMt9GEgP}'); });
 
-
-
-
-
-
-
-// Routes that are not used in CTF
-app.get('/register', (req, res) => {res.render('register');});
+app.get('/register', (req, res) => { res.render('register'); });
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   await registerUser(username, password);
   res.redirect('/login');
 });
-app.get('/create-post', (req, res) => {
+app.get('/create-post', checkIsAdmin, (req, res) => {
   const encodedUsername = req.cookies.username;
   if (!encodedUsername) return res.redirect('/login');
   const username = decode(encodedUsername);
   res.render('create-post', { title: 'Create Post', username });
 });
-app.post('/create-post', upload.single('image'), async (req, res) => {
+app.post('/create-post', checkIsAdmin, upload.single('image'), async (req, res) => {
   const encodedUsername = req.cookies.username;
   if (!encodedUsername) return res.redirect('/login');
   const username = decode(encodedUsername);
@@ -221,26 +211,7 @@ app.post('/create-post', upload.single('image'), async (req, res) => {
   res.redirect('/');
 });
 
-
-
-
-
-
-
-app.listen(3000, () => {console.log('Server is running on http://localhost:3000');});
-
-
-
-
-
-
-
-
-
-
-
-
-
+app.listen(3000, () => { console.log('Server is running on http://localhost:3000'); });
 
 // Helper functions
 async function getUserByUsername(username) {
@@ -285,25 +256,18 @@ async function getCommentsByPostId(postId) {
 
 async function createComment(content, username, postId) {
   await new Promise((resolve, reject) => {
-    db.run('INSERT INTO comments (content, user_name, post_id) VALUES (?, ?, ?)', [content, username, postId], (err) => {
+    const sql = `INSERT INTO comments (content, user_name, post_id) VALUES ('${content}', '${username}', '${postId}')`;
+    db.run(sql, (err) => {
       if (err) reject(err);
       resolve();
     });
   });
 }
+
 
 async function deletePost(postId) {
   await new Promise((resolve, reject) => {
     db.run('DELETE FROM posts WHERE id = ?', [postId], (err) => {
-      if (err) reject(err);
-      resolve();
-    });
-  });
-}
-
-async function registerUser(username, password) {
-  await new Promise((resolve, reject) => {
-    db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password], (err) => {
       if (err) reject(err);
       resolve();
     });
@@ -321,7 +285,16 @@ async function createPost(title, content, imageUrl, username) {
 
 async function updateFlagSeen(userId) {
   await new Promise((resolve, reject) => {
-    db.run('UPDATE users SET flag_seen = TRUE WHERE id = ?', [userId], (err) => {
+    db.run('UPDATE users SET flag_seen = ? WHERE id = ?', [true, userId], (err) => {
+      if (err) reject(err);
+      resolve();
+    });
+  });
+}
+
+async function registerUser(username, password) {
+  await new Promise((resolve, reject) => {
+    db.run('INSERT INTO users (username, password, admin) VALUES (?, ?, false)', [username, password], (err) => {
       if (err) reject(err);
       resolve();
     });

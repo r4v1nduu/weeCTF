@@ -138,9 +138,17 @@ app.get('/logout', (req, res) => {
 
 app.get('/post/:id', checkIsAdmin, async (req, res) => {
   const postId = req.params.id;
-  const post = await getPostById(postId);
-  const comments = await getCommentsByPostId(postId);
-  res.render('post', { title: post.title, post, comments });
+  try {
+    const post = await getPostById(postId);
+    if (!post) {
+      return res.status(404).render('404', { message: 'Post not found' });
+    }
+    const comments = await getCommentsByPostId(postId);
+    res.render('post', { title: post.title, post, comments });
+  } catch (err) {
+    console.error(err);
+    res.status(500).render('error', { message: 'An error occurred while fetching the post' });
+  }
 });
 
 app.post('/post/:id/comment', checkIsAdmin, async (req, res) => {

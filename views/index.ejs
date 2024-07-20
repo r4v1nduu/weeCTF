@@ -12,6 +12,10 @@
   <div class="container mt-4">
     <h1>Welcome to the Blog</h1>
 
+    <% if (error) { %>
+      <p style="color: red;"><%= error %></p>
+    <% } %>
+
     <!--
     ORL{o0paDhZRuaAcaSai}
     You found a FLAG, Keep looking through page sources ;)
@@ -36,7 +40,7 @@
                 <img src="<%= post.image_url %>" class="img-fluid aspect-ratio-item" alt="Post Image">
               </div>
             <% } %>
-            <% if (isAdmin) { %>
+            <% if (isAdmin === '1') { %>
               <form action="/delete-post/<%= post.id %>" method="POST">
                 <button type="submit" class="btn btn-danger">Delete</button>
               </form>

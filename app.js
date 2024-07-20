@@ -10,16 +10,14 @@ const multer = require('multer');
 const path = require('path');
 
 const app = express();
-//const db = new sqlite3.Database(path.join(__dirname, 'data', 'blog.db'));
 const db = new sqlite3.Database('blog.db');
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
-app.use(cookieParser());
 app.use(expressLayouts);
-
+app.use(cookieParser());
 app.use(session({
   secret: '5vsaFghFA54adsF4a',
   resave: false,
@@ -37,30 +35,23 @@ const upload = multer({ storage });
 // Middleware to set user data for views
 app.use(async (req, res, next) => {
   const encodedUsername = req.cookies.username;
-  const isAdmin = req.cookies.isAdmin === 'true';
   if (encodedUsername) {
     const username = decode(encodedUsername);
     db.get('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, user) => {
       if (err) return next();
       res.locals.user = user;
-      res.locals.isAdmin = isAdmin;
-      res.user = user;
-      res.isAdmin = isAdmin;
       next();
     });
   } else {
     res.locals.user = null;
-    res.locals.isAdmin = false;
-    res.user = null;
-    res.isAdmin = false;
     next();
   }
 });
 
-// Middleware to check isAdmin value from cookie for each route
-function checkIsAdmin(req, res, next) {
-  res.isAdmin = req.cookies.isAdmin;
-  next();
+function isAuthenticated(req, res, next) {
+  if (res.locals.user !== undefined && res.locals.user !== null) { return next(); }
+  req.session.error = 'You must log in first';
+  res.redirect('/login');
 }
 
 
@@ -69,68 +60,66 @@ function checkIsAdmin(req, res, next) {
 
 
 
-app.get('/', async (req, res) => {
+app.get('/' , async (req, res) => {
   const posts = await getAllPosts();
   const encodedUsername = req.cookies.username;
-  let message = '';
-  let showFlag = req.cookies.showFlag === 'true'; // Check the showFlag cookie
+  const message = "Login to see posts"
+  const showFlag = req.cookies.showFlag === 'true'; // Check the showFlag cookie
+  const isAdmin = req.cookies.isAdmin;
   let flag = null;
-  let isAdmin = false;
 
   if (encodedUsername) {
     const username = decode(encodedUsername);
-
     db.get('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, user) => {
-      if (err) return res.send('Error loading user');
+      if (err) {return res.status(500).render('404', { message: 'Internal server error. Please try again later.' });}
       
       // Check for the deleteFlag cookie and set the flag if present
-      if (req.cookies.deleteFlag) {
-        flag = req.cookies.deleteFlag;
-      } else {
-        flag = user.flag;
-      }
+      if (req.cookies.deleteFlag) {flag = req.cookies.deleteFlag;} else {flag = user.flag;}
       
       res.clearCookie('showFlag'); // Clear the showFlag cookie after showing it
       res.clearCookie('deleteFlag'); // Clear the deleteFlag cookie after showing it
-      isAdmin = user.admin;
-      res.render('index', { posts, message, showFlag, flag, user, isAdmin });
+      res.render('index', { posts, message, showFlag, flag, user, isAdmin, error: req.session.error });
     });
 
   } else {
-    message = "Login to see posts";
-    res.render('index', { posts, message, showFlag, flag, isAdmin });
+    res.render('index', { posts, message, showFlag, flag, isAdmin, error: req.session.error });
+    req.session.error = null;
   }
 });
 
+
+
 app.get('/login', (req, res) => {
-  res.render('login');
+  res.render('login', { error: req.session.error });
+  req.session.error = null;
 });
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-
-  // Intentionally vulnerable to SQL Injection: using string concatenation
   const sql = `SELECT *, users.flag FROM users WHERE username = '${username}' AND password = '${password}'`;
   
   db.get(sql, async (err, user) => {
-    if (err) return res.send('Error logging in');
-    if (!user) return res.send('Invalid username or password');
-
-    const showFlag = !user.flag_seen;
-
-    if (showFlag) {
-      await updateFlagSeen(user.id);
+    if (err) {
+      req.session.error = 'Error logging in';
+      return res.status(500).redirect('/login');
+    }
+    if (!user) {
+      req.session.error = 'Invalid username or password';
+      return res.status(401).redirect('/login');
     }
 
+    const showFlag = !user.flag_seen_login;
+    if (showFlag) { await updateFlagSeenLogin(user.id); }
+
     const dbUsername = user.username;
-    const isAdmin = user.admin;
     const encodedUsername = encode(dbUsername);
+    const isAdmin = user.admin;
+    
     res.cookie('username', encodedUsername);
     res.cookie('isAdmin', isAdmin);
     res.cookie('showFlag', showFlag);
     res.redirect('/');
   });
-
 });
 
 app.get('/logout', (req, res) => {
@@ -140,7 +129,9 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-app.get('/post/:id', async (req, res) => {
+
+
+app.get('/post/:id', isAuthenticated, async (req, res) => {
   const postId = req.params.id;
   try {
     const post = await getPostById(postId);
@@ -150,12 +141,11 @@ app.get('/post/:id', async (req, res) => {
     const comments = await getCommentsByPostId(postId);
     res.render('post', { title: post.title, post, comments });
   } catch (err) {
-    console.error(err);
-    res.status(500).render('error', { message: 'An error occurred while fetching the post' });
+    res.status(500).render('404', { message: 'An error occurred while fetching the post' });
   }
 });
 
-app.post('/post/:id/comment', async (req, res) => {
+app.post('/post/:id/comment', isAuthenticated, async (req, res) => {
   const encodedUsername = req.cookies.username;
   if (!encodedUsername) return res.redirect('/login');
   const username = decode(encodedUsername);
@@ -165,25 +155,40 @@ app.post('/post/:id/comment', async (req, res) => {
   res.redirect(`/post/${postId}`);
 });
 
-app.post('/delete-post/:id', checkIsAdmin, async (req, res) => {
+app.post('/delete-post/:id', isAuthenticated, async (req, res) => {
   const postId = req.params.id;
   const encodedUsername = req.cookies.username;
+  const username = decode(encodedUsername);
+  if (!encodedUsername) { return res.status(403).render('404', { message: 'An error Occured !' }); }
 
-  if (!encodedUsername) {
-    return res.status(403).send('You do not have permission to delete this post');
+  const sql = `SELECT *, users.flag FROM users WHERE username = '${username}'`;
+
+  let user;
+  try {
+    user = await new Promise((resolve, reject) => {
+      db.get('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, user) => {
+        if (err) return reject(err);
+        resolve(user);
+      });
+    });
+  } catch (error) {
+    return res.status(500).render('404', { message: 'Internal server error. Please try again later.' });
   }
 
-  const user = await getUserByUsername(decode(encodedUsername));
-  const isAdmin = res.isAdmin; // Use the isAdmin value from the middleware
+  const isAdmin = req.cookies.isAdmin;
+  if (isAdmin === '1') {
+    await deletePost(postId);
 
-  if (!isAdmin) {
-    return res.status(403).send('You do not have permission to delete this post');
+    const showFlag = !user.flag_seen_delete;
+    if (showFlag) { await updateFlagSeenDelete(user.id); }
+
+    res.cookie('deleteFlag', 'ORL{n6YgeljcNDnYT5yF}'); // Set the deleteFlag cookie
+    res.cookie('showFlag', showFlag); // Set the showFlag cookie
+    res.redirect('/');
+  } else {
+    req.session.error = 'You do not have permission to delete posts';
+    return res.status(403).redirect('/');
   }
-
-  await deletePost(postId);
-  res.cookie('deleteFlag', 'ORL{n6YgeljcNDnYT5yF}'); // Set the deleteFlag cookie
-  res.cookie('showFlag', 'true'); // Set the showFlag cookie
-  res.redirect('/');
 });
 
 
@@ -202,17 +207,24 @@ app.get('/images', (req, res) => { res.send('Nothing Here'); });
 app.get('/videos', (req, res) => { res.send('Nothing Here'); });
 app.get('/assets', (req, res) => { res.send('Nothing Here'); });
 
-app.get('/logs', (req, res) => { res.send('A'); });
+app.get('/logs', (req, res) => { res.send('Nothing Here'); });
 app.get('/backup', (req, res) => { res.send('Another Flag here > ORL{ZzwQLnLSdMt9GEgP}'); });
 
 app.get('/register', (req, res) => { res.render('register'); });
 
-app.get('/create-post', (req, res) => {
+app.get('/create-post', isAuthenticated, (req, res) => {
   const encodedUsername = req.cookies.username;
   if (!encodedUsername) return res.redirect('/login');
   const username = decode(encodedUsername);
   res.render('create-post', { title: 'Create Post', username });
 });
+
+
+
+
+
+
+
 
 
 
@@ -231,16 +243,6 @@ app.listen(port, function () {
 
 
 // Helper functions
-async function getUserByUsername(username) {
-  const user = await new Promise((resolve, reject) => {
-    db.get('SELECT *, users.flag FROM users WHERE username = ?', [username], (err, user) => {
-      if (err) reject(err);
-      resolve(user);
-    });
-  });
-  return user;
-}
-
 async function getAllPosts() {
   const posts = await new Promise((resolve, reject) => {
     db.all('SELECT posts.*, users.username FROM posts JOIN users ON posts.user_name = users.username', (err, posts) => {
@@ -281,6 +283,20 @@ async function getCommentsByPostId(postId) {
   }
 }
 
+async function createPost(title, content, imageUrl, username) {
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('INSERT INTO posts (title, content, image_url, user_name) VALUES (?, ?, ?, ?)', [title, content, imageUrl, username], (err) => {
+        if (err) reject(err);
+        resolve();
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
 async function createComment(content, username, postId) {
   await new Promise((resolve, reject) => {
     const sql = `INSERT INTO comments (content, user_name, post_id) VALUES ('${content}', '${username}', '${postId}')`;
@@ -305,10 +321,24 @@ async function deletePost(postId) {
   }
 }
 
-async function updateFlagSeen(userId) {
+async function updateFlagSeenLogin(userId) {
   try {
     await new Promise((resolve, reject) => {
-      db.run('UPDATE users SET flag_seen = ? WHERE id = ?', [true, userId], (err) => {
+      db.run('UPDATE users SET flag_seen_login = ? WHERE id = ?', [true, userId], (err) => {
+        if (err) reject(err);
+        resolve();
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+async function updateFlagSeenDelete(userId) {
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE users SET flag_seen_delete = ? WHERE id = ?', [true, userId], (err) => {
         if (err) reject(err);
         resolve();
       });

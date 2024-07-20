@@ -8,6 +8,10 @@
 <body>
   <h1>Login</h1>
   <!-- newuser47 is restricted -->
+
+  <% if (error) { %>
+    <p style="color: red;"><%= error %></p>
+  <% } %>
   
   <form action="/login" method="post">
     <div class="form-group">

@@ -1,3 +1,2 @@
-Create "uploads" folder under public directory !
-
-Disable: Register and Create-Post directories.
+docker build -t your-image-name .
+docker run -p 80:80 your-image-name

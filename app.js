@@ -232,7 +232,7 @@ app.get('/create-post', isAuthenticated, (req, res) => {
 
 
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 80;
 app.listen(port, function () {
   console.log(`wee Blog listening on ${port}!`);
 });

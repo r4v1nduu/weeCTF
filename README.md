@@ -33,7 +33,7 @@ The CTF includes a total of 7 flags to discover.
 | ORL{xrR0UfF9zVQR7s2j} | From `robots.txt` (Base64 encoded) | 10 |
 | ORL{ZzwQLnLSdMt9GEgP} | From an important-looking directory | 10 |
 | ORL{o0paDhZRuaAcaSai} | From page source | 5 |
-| N/A | ~~XSS vulnerability~~ | N/A |
+|  | ~~XSS vulnerability~~ |  |
 
 **Important:** Provide the following resources to participants:
 - A password list for login brute-forcing

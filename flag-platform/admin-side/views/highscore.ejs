@@ -1,0 +1,27 @@
+
+<%- include('layout') %>
+<div class="container mt-4">
+    <h3 class="mb-3">Highscores</h3>
+
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>CTF Program</th>
+                <th>Total Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% players.forEach(player => { %>
+                <tr>
+                    <td><%= player.username %></td>
+                    <td><%= player.full_name %></td>
+                    <td><%= player.program %></td>
+                    <td><%= player.total_points %></td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+

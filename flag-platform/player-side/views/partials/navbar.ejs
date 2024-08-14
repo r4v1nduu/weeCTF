@@ -1,0 +1,23 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/dashboard">
+            <img src="images/orelit.png" height="28">
+        </a>
+        <div>
+            <ul class="navbar-nav ml-auto">
+                <% if (!user) { %>
+                    <li class="nav-item">
+                        <a class="nav-link ms-3" href="/login">Login</a>
+                    </li>
+                <% } else { %>
+                    <li class="nav-item">
+                        <span class="nav-link active">Hi! <%= user.username %></span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link ms-3" href="/logout">Logout</a>
+                    </li>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+</nav>

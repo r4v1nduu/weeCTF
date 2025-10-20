@@ -1,89 +1,79 @@
-# wee CTF
+# weeCTF — Beginner Capture The Flag
 
-This is a complete Capture The Flag (CTF) challenge designed for beginners, featuring a flag submission platform.
+Welcome to **wee CTF**! This is a beginner-friendly Capture The Flag challenge where you’ll learn the basics of web and forensics hacking while having fun.
 
-## About the CTF
+---
 
-This CTF is ideal for beginners, focusing on well-known vulnerabilities such as Cross-Site Scripting (XSS), SQL Injection, and source code exposure. Participants will also need to demonstrate their knowledge of directory enumeration, brute forcing, steganography, and source code exploration.
+## 🧩 What’s Inside
 
-The CTF includes a total of 7 flags to discover.
+This CTF has **7 flags** hidden across different parts of a small web app. You’ll face challenges related to:
 
-1. **robots.txt Flag**: There is a flag encoded with Base64 in the `robots.txt` file.
-2. **Source Code Flag**: The main page's source code contains a hidden flag.
-3. **Directory Enumeration Flag**: A flag can be found by performing directory enumeration and locating the `/backup` directory.
-4. **Login Page Flag**: The username is exposed in the source code on the login page. Participants can exploit this vulnerability using SQL Injection or brute force the login.
-5. **Admin Cookie Flag**: After logging in, players can modify the `isAdmin` cookie value to gain admin access, revealing a DELETE button for posts. Deleting any post will reward the player with a flag.
-6. **Download Directory Flag**: In the `/Downloads` directory, there is a ZIP file. A flag can be obtained by downloading the ZIP file and brute-forcing its password.
-7. **Steganography Flag**: After extracting the ZIP file, an image is revealed. Players can use steganography techniques to find the final flag hidden within the image.
+* 🕵️‍♂️ Directory Enumeration
+* 💉 SQL Injection (SQLi)
+* 🍪 Cookie Tampering
+* 🔐 Password Brute Forcing
+* 🖼️ Steganography (Hidden data in images)
+* 🧠 Source Code Exploration
 
-## Flag Submission Platform
+---
 
-*Details about the Flag Submission Platform will be added here.*
+## 🏁 Flag List
 
-## Setup CTF Box
+| Flag                    | Location                           | Points    |
+| ----------------------- | ---------------------------------- | --------- |
+| `ORL{o0paDhZRuaAcaSai}` | Page Source                        | 5         |
+| `ORL{xrR0UfF9zVQR7s2j}` | robots.txt (Base64 encoded)        | 10        |
+| `ORL{ZzwQLnLSdMt9GEgP}` | Hidden directory (/backup)         | 10        |
+| `ORL{s0kQc9cgHezyOY9b}` | Login (SQLi or brute force)        | 20        |
+| `ORL{T18NO67HEHG6LH1O}` | ZIP File (brute force password)    | 20        |
+| `ORL{K82P1LVTRBSZX2AS}` | Steganography Image                | 30        |
+| `ORL{n6YgeIjcNDnYT5yF}` | Cookie modification (Admin delete) | 30        |
 
-### Flag Details
+**Total Points:** 125
 
-| Flag | Flag Details | Points |
-|------|--------------|--------|
-| ORL{n6YgeIjcNDnYT5yF} | Deleting a post (cookie modification) | 30 |
-| ORL{K82P1LVTRBSZX2AS} | Steganography | 30 |
-| ORL{T18NO67HEHG6LH1O} | ZIP file brute force | 20 |
-| ORL{s0kQc9cgHezyOY9b} | Logging in as the user (SQLi or brute force) | 20 |
-| ORL{xrR0UfF9zVQR7s2j} | From `robots.txt` (Base64 encoded) | 10 |
-| ORL{ZzwQLnLSdMt9GEgP} | From an important-looking directory | 10 |
-| ORL{o0paDhZRuaAcaSai} | From page source | 5 |
-|  | ~~XSS vulnerability~~ |  |
+---
 
-**Important:** Provide the following resources to participants:
-- A password list for login brute-forcing
-- A password list for ZIP file brute-forcing
-- A directory list for directory enumeration
+## ▶️ Run the CTF Box
 
-### Run the CTF Box
-
-#### Node.js
-To run the CTF box using Node.js, execute the following commands. The application will run on port 3000.
+**Using Node.js:**
 
 ```bash
 cd ctf-box
-node app.js
-```
-
-#### Docker
-To create a Docker image and run the CTF box as a container, use the following commands:
-
-```bash
-cd ctf-box
-docker build -t <your_image_name> .
-docker run -p <port>:3000 <your_image_name>
-```
-
-### Additional Information
-
-*To reset the database, copy the backup database from the "not_in_ctf" folder and rename it.*
-
-*Some functionalities that were removed from the web application (post creation, account registration) are stored in the "not_in_ctf" folder.*
-
-## Setup Flag Submission Platform
-
-The flag submission platform includes two interfaces: one for the admin and one for the players.
-
-### Run Flag Submission Platform
-
-#### Node.js
-
-The Admin Side will run on port 8085, and the Player Side will run on port 8080.
-
-**Admin Side**
-
-```bash
-cd flag-platform/admin-side
 npm install
 node app.js
 ```
 
-**Player Side**
+App runs on: [http://localhost:3000](http://localhost:3000)
+
+**Using Docker:**
+
+```bash
+cd ctf-box
+docker build -t wee-ctf .
+docker run -p 3000:3000 wee-ctf
+```
+
+---
+
+## 🧠 Helpful Wordlists
+
+Provide these to players:
+
+*  `login-passwords.txt` — for login brute forcing
+*  `zip-passwords.txt` — for ZIP cracking
+*  `dirs.txt` — for directory enumeration
+
+---
+
+## 💻 Flag Submission Platform
+
+The platform has **two parts:**
+
+| Player Side    | Admin Side    |
+| -------------- | ------------- |
+| Port: 8080     | Port: 8085    |
+
+### Run Player Side
 
 ```bash
 cd flag-platform/player-side
@@ -91,17 +81,37 @@ npm install
 node app.js
 ```
 
-To run the application using **pm2**, use the following command instead of `node app.js`:
+### Run Admin Side
 
 ```bash
-pm2 start app.js --name <App_Name>
+cd flag-platform/admin-side
+npm install
+node app.js
 ```
 
-### Admin Side Credentials
+Use `pm2 start app.js --name <App_Name>` for background running.
 
-| Username   | Password       | Access Level                  |
-|------------|----------------|--------------------------------|
-| admin      | KUTsUPGm       | No access to add/remove flags and players |
-| superadmin | 3VHgBJzpzL1hH6HX | Full Access                  |
+---
 
+## 🔐 Admin Login
 
+| Username   | Password         | Access      |
+| ---------- | ---------------- | ----------- |
+| admin      | KUTsUPGm         | Limited     |
+| superadmin | 3VHgBJzpzL1hH6HX | Full access |
+
+---
+
+## 🔄 Resetting the CTF
+
+To reset the DB:
+
+1. Go to `not_in_ctf/`
+2. Copy the backup DB file
+3. Replace the current database file
+
+---
+
+## 🏆 Have Fun!
+
+Enjoy solving the wee CTF! 🥳
